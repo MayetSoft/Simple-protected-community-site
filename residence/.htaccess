@@ -1,0 +1,16 @@
+# Block direct access to config files
+<Files "config.json">
+    Require all denied
+</Files>
+
+<Files "config_residence.json">
+    Require all denied
+</Files>
+
+# Force HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Disable directory listing
+Options -Indexes
