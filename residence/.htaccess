@@ -1,11 +1,17 @@
-# Block direct access to config files
-<Files "config.json">
+# Deny direct access to data files: config, throttle data, and the
+# protected content itself (served only through index.php).
+<FilesMatch "\.json$">
     Require all denied
-</Files>
+</FilesMatch>
 
-<Files "config_residence.json">
+<FilesMatch "^(content\.html|common\.php)$">
     Require all denied
-</Files>
+</FilesMatch>
+
+# Legacy names, in case an old config is still around
+<FilesMatch "^config_residence\.json$">
+    Require all denied
+</FilesMatch>
 
 # Force HTTPS
 RewriteEngine On
