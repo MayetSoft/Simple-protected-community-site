@@ -1,74 +1,114 @@
-# Site d'informations protégé — copropriété / conseil syndical
+# Simple Protected Community Site
 
-Système minimal en PHP pour publier une page d'informations protégée par un
-mot de passe partagé (sans création de comptes), hébergeable sur un mutualisé
-type o2switch.
+**English** · [Français](README.fr.md)
 
-## Fichiers
+A minimal PHP app to publish a single information page protected by a
+shared password: no user accounts, no database. Runs on any Apache + PHP
+shared hosting (cPanel, o2switch…).
+
+Typical use: a residents' or co-owners' board, an association, a club —
+any community that wants to share meeting notes, announcements or useful
+contacts without making them public.
+
+> The user interface is in French. Contributions adding translations are
+> welcome.
+
+## Features
+
+- One content page, protected by a **shared access code**.
+- An admin page with a rich text editor (TinyMCE) and embedded images.
+- Maintenance mode (page unavailable) and read-only mode.
+- No database: everything is stored in files.
+
+## Requirements
+
+- PHP ≥ 7.4 (`mbstring` extension recommended).
+- Apache ≥ 2.4 with `mod_rewrite` and `.htaccess` overrides allowed.
+- An HTTPS certificate (Let's Encrypt is fine).
+
+## Files
 
 ```
-residence/
-├── index.php      Page utilisateur : mot de passe partagé, affichage du contenu
-├── admin.php      Administration : installation, éditeur TinyMCE, paramètres
-├── common.php     Fonctions partagées (non accessible via le web)
-├── content.html   Contenu publié (non accessible directement — servi via index.php)
-├── config.json    Créé à l'installation : hash des mots de passe, options
-├── .htaccess      Protège les fichiers de données, force HTTPS
-└── robots.txt     Interdit l'indexation par les moteurs de recherche
+site/
+├── index.php      User page: shared access code, content display
+├── admin.php      Admin: first-run setup, TinyMCE editor, settings
+├── common.php     Shared helpers and settings (not web-accessible)
+├── .htaccess      Protects data files, forces HTTPS
+└── robots.txt     Disallows search engine indexing
 ```
 
-## Sécurité intégrée
+Files created at runtime (excluded from the repository by `.gitignore`):
 
-- Aucun mot de passe par défaut : l'installation (premier accès à `admin.php`)
-  impose de choisir les deux mots de passe (admin ≥ 10 caractères,
-  utilisateur ≥ 8 caractères, avec confirmation).
-- Mots de passe stockés hachés (bcrypt via `password_hash`).
-- `content.html` et `config.json` sont **inaccessibles directement** :
-  le contenu n'est servi qu'après saisie du mot de passe, via `index.php`.
-- Jetons anti-CSRF sur tous les formulaires.
-- Limitation des tentatives de connexion : 5 échecs par IP → blocage 15 minutes.
-- Cookies de session `HttpOnly`, `SameSite=Lax`, `Secure` (si HTTPS).
-- En-têtes `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`.
+```
+├── config.json    Password hashes, options
+├── content.html   Published content (served only through index.php)
+└── throttle.json  Login attempt counter
+```
 
-## Déploiement (o2switch / cPanel)
+## Built-in security
 
-1. **Téléverser** le dossier `residence/` dans `public_html/`.
-2. **Renommer `admin.php`** en un nom difficile à deviner, par exemple
-   `gestion-3fA9kP.php`. Le code suit automatiquement le nouveau nom,
-   aucune modification n'est nécessaire.
-3. **Activer HTTPS** (Let's Encrypt) depuis cPanel. Le `.htaccess` redirige
-   ensuite tout le trafic vers HTTPS.
-4. **Ouvrir immédiatement** la page d'administration pour faire
-   l'installation (choix des mots de passe). ⚠️ Tant que l'installation
-   n'est pas faite, le premier visiteur qui trouve la page d'administration
-   peut choisir les mots de passe : ne pas laisser traîner un site non
-   initialisé.
-5. Vérifier que `https://votresite/residence/content.html` et
-   `https://votresite/residence/config.json` renvoient bien une erreur
-   « 403 Forbidden ».
+- No default password: the first visit to `admin.php` forces you to choose
+  both passwords (admin ≥ 10 characters, user ≥ 8 characters, confirmed).
+- Passwords stored hashed (bcrypt via `password_hash`).
+- `content.html` and `config.json` are **not directly reachable**: content
+  is only served by `index.php` after the password is entered.
+- CSRF tokens on every form.
+- Login throttling: 5 failures per IP → 15-minute lockout.
+- Session cookies are `HttpOnly`, `SameSite=Lax`, `Secure` (over HTTPS).
+- `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` headers.
 
-## Option : données hors du dossier web
+## Deployment (example: cPanel)
 
-Par défaut, les données (`config.json`, `content.html`, `throttle.json`)
-sont stockées dans le dossier `residence/`, protégées par `.htaccess`.
-Pour une protection indépendante du `.htaccess`, éditez `common.php` :
+1. **Upload** the `site/` folder into `public_html/`. You can rename it
+   (e.g. `info/`): that name will appear in the URL.
+2. **Rename `admin.php`** to something hard to guess, e.g.
+   `manage-3fA9kP.php`. The code follows the new name automatically.
+3. **Enable HTTPS** (Let's Encrypt) in cPanel. The `.htaccess` then
+   redirects all traffic to HTTPS.
+4. **Immediately open** the admin page to run the setup (choose the
+   passwords). ⚠️ Until setup is done, the first visitor who finds the
+   admin page can choose the passwords: do not leave an uninitialised
+   site online.
+5. Check that `https://yoursite/site/content.html` and
+   `https://yoursite/site/config.json` return **403 Forbidden**.
+
+## Customisation
+
+Settings live at the top of `common.php`:
 
 ```php
-define('DATA_DIR', '/home/VOTRELOGIN/residence_data');
+define('SITE_TITLE', "Espace d'informations"); // displayed title
+define('ADMIN_PWD_MIN', 10);                   // admin password min length
+define('USER_PWD_MIN', 8);                     // user password min length
 ```
 
-Créez ce dossier au préalable (hors de `public_html/`), accessible en
-écriture par PHP.
+### Option: data outside the web root
 
-## Limites connues
+By default, data files (`config.json`, `content.html`, `throttle.json`)
+live in the app folder, protected by `.htaccess`. For protection that does
+not depend on `.htaccess`, edit `common.php`:
 
-- L'éditeur TinyMCE est chargé depuis un CDN (version épinglée). L'accès à
-  Internet est nécessaire pour la page d'administration, et il n'y a pas de
-  hachage d'intégrité (SRI) car TinyMCE charge dynamiquement d'autres
-  ressources depuis ce même CDN.
-- Le mot de passe utilisateur est partagé entre tous les résidents : il ne
-  protège que des curieux, pas d'un résident qui le diffuse. Ne pas y
-  publier de données sensibles (le système est prévu pour des
-  comptes-rendus, annonces, contacts utiles…).
-- Les images sont intégrées en Base64 dans le contenu : éviter les images
-  volumineuses (limite de 2 Mo par image côté éditeur).
+```php
+define('DATA_DIR', '/home/YOURLOGIN/site_data');
+```
+
+Create that folder first (outside `public_html/`), writable by PHP.
+
+## Known limitations
+
+- TinyMCE is loaded from a CDN (pinned version). The admin page needs
+  Internet access, and there is no Subresource Integrity hash because
+  TinyMCE dynamically loads further resources from the same CDN.
+- The user password is shared by all members: it keeps out the curious,
+  not a member who leaks it. Do not publish sensitive data (the tool is
+  meant for meeting notes, announcements, useful contacts…).
+- Images are embedded as Base64 in the content: avoid large images
+  (2 MB per image limit in the editor).
+
+## Security
+
+To report a vulnerability, see [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE)

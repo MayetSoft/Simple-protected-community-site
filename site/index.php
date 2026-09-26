@@ -20,12 +20,12 @@ $self   = selfUrl();
 
 $content = file_exists(CONTENT_FILE)
   ? (string)file_get_contents(CONTENT_FILE)
-  : "<h2>Infos Résidence</h2><p>Le contenu n'a pas encore été publié.</p>";
+  : "<p>Le contenu n'a pas encore été publié.</p>";
 
 $action = (string)($_POST['action'] ?? '');
 
 if ($action !== '' && !csrfCheck()) {
-  $errors[] = "Jeton de sécurité invalide ou session expirée. Réessaie.";
+  $errors[] = "Jeton de sécurité invalide ou session expirée. Réessayez.";
   $action = '';
 }
 
@@ -69,7 +69,7 @@ if (!$config['setup_done']) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Infos Résidence</title>
+  <title><?=h(SITE_TITLE)?></title>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; max-width: 980px; }
     .box { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
@@ -83,7 +83,7 @@ if (!$config['setup_done']) {
 </head>
 <body>
 
-<h1>Infos Résidence</h1>
+<h1><?=h(SITE_TITLE)?></h1>
 
 <?php if ($errors): ?>
   <div class="msg err">

@@ -8,11 +8,6 @@
     Require all denied
 </FilesMatch>
 
-# Legacy names, in case an old config is still around
-<FilesMatch "^config_residence\.json$">
-    Require all denied
-</FilesMatch>
-
 # Force HTTPS
 RewriteEngine On
 RewriteCond %{HTTPS} off
