@@ -1,0 +1,11 @@
+# Runtime data created by the application — never commit it
+# (password hashes, published content, login throttling state).
+site/config.json
+site/content.html
+site/throttle.json
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

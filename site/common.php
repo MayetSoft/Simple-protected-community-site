@@ -10,10 +10,13 @@ declare(strict_types=1);
  * Data directory: config + content + throttle data are stored here.
  * Default: this folder (protected by .htaccess).
  * For extra safety on shared hosting you can set an ABSOLUTE path
- * outside the web root, e.g. '/home/LOGIN/residence_data'
+ * outside the web root, e.g. '/home/LOGIN/site_data'
  * (create the folder first, writable by PHP).
  */
 define('DATA_DIR', __DIR__);
+
+/** Title shown in page headers and browser tabs. */
+define('SITE_TITLE', "Espace d'informations");
 
 define('CONFIG_FILE',   DATA_DIR . '/config.json');
 define('CONTENT_FILE',  DATA_DIR . '/content.html');
@@ -87,7 +90,7 @@ function saveConfig(array $cfg): void {
   if ($json === false) die("Erreur encodage JSON.");
   if (@file_put_contents(CONFIG_FILE, $json, LOCK_EX) === false) {
     http_response_code(500);
-    die("Impossible d'écrire la config. Vérifie les droits d'écriture sur : " . h(DATA_DIR));
+    die("Impossible d'écrire la config. Vérifiez les droits d'écriture sur : " . h(DATA_DIR));
   }
 }
 

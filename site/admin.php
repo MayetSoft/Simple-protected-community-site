@@ -35,7 +35,7 @@ $action = (string)($_POST['action'] ?? '');
 
 /** All POST actions require a valid CSRF token. */
 if ($action !== '' && !csrfCheck()) {
-  $errors[] = "Jeton de sécurité invalide ou session expirée. Réessaie.";
+  $errors[] = "Jeton de sécurité invalide ou session expirée. Réessayez.";
   $action = '';
 }
 
@@ -72,7 +72,7 @@ if (!$config['setup_done']) {
       session_regenerate_id(true);
 
       if (!file_exists(CONTENT_FILE)) {
-        file_put_contents(CONTENT_FILE, "<h2>Infos Résidence</h2><p>Bienvenue. Modifiez cette page via l'admin.</p>", LOCK_EX);
+        file_put_contents(CONTENT_FILE, "<h2>Bienvenue</h2><p>Modifiez cette page via l'administration.</p>", LOCK_EX);
       }
 
       header('Location: ' . $self);
@@ -84,7 +84,7 @@ if (!$config['setup_done']) {
   if (!isAdminLoggedIn() && $action === 'login') {
     $wait = throttleRetryAfter();
     if ($wait > 0) {
-      $errors[] = "Trop de tentatives. Réessaie dans " . ceil($wait / 60) . " minute(s).";
+      $errors[] = "Trop de tentatives. Réessayez dans " . ceil($wait / 60) . " minute(s).";
     } else {
       $pwd = (string)($_POST['admin_password'] ?? '');
       if ($config['admin_password_hash'] && password_verify($pwd, $config['admin_password_hash'])) {
@@ -135,7 +135,7 @@ if (!$config['setup_done']) {
       // Defense in depth: never store PHP tags in content
       $html = str_replace(['<?', '?>'], ['&lt;?', '?&gt;'], $html);
       if (@file_put_contents(CONTENT_FILE, $html, LOCK_EX) === false) {
-        $errors[] = "Impossible d'écrire le contenu. Vérifie les droits d'écriture sur ce dossier.";
+        $errors[] = "Impossible d'écrire le contenu. Vérifiez les droits d'écriture sur ce dossier.";
       } else {
         header('Location: ' . $self . '?ok=content');
         exit;
@@ -147,7 +147,7 @@ if (!$config['setup_done']) {
 // Load current content
 $currentContent = file_exists(CONTENT_FILE)
   ? (string)file_get_contents(CONTENT_FILE)
-  : "<h2>Infos Résidence</h2><p>Écrivez ici…</p>";
+  : "<h2>Bienvenue</h2><p>Écrivez ici…</p>";
 
 ?>
 <!doctype html>
@@ -155,7 +155,7 @@ $currentContent = file_exists(CONTENT_FILE)
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin — Infos Résidence</title>
+  <title>Admin — <?=h(SITE_TITLE)?></title>
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; max-width: 980px; }
     .box { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
@@ -179,7 +179,7 @@ $currentContent = file_exists(CONTENT_FILE)
 </head>
 <body>
 
-<h1>Admin — Infos Résidence</h1>
+<h1>Admin — <?=h(SITE_TITLE)?></h1>
 
 <?php if ($errors): ?>
   <div class="msg err">
@@ -197,7 +197,7 @@ $currentContent = file_exists(CONTENT_FILE)
 
   <div class="box">
     <h2>Installation (1ère fois)</h2>
-    <p>Choisis maintenant les 2 mots de passe. Aucun mot de passe par défaut n'est utilisé.</p>
+    <p>Choisissez maintenant les 2 mots de passe. Aucun mot de passe par défaut n'est utilisé.</p>
     <form method="post">
       <?=csrfField()?>
       <input type="hidden" name="action" value="setup" />
@@ -224,7 +224,7 @@ $currentContent = file_exists(CONTENT_FILE)
       <div style="margin-top:12px;">
         <button type="submit">Initialiser</button>
       </div>
-      <p><small>Si tu as une erreur de droits d'écriture, il faudra ajuster les permissions côté hébergeur.</small></p>
+      <p><small>En cas d'erreur de droits d'écriture, ajustez les permissions côté hébergeur.</small></p>
     </form>
   </div>
 
@@ -298,7 +298,7 @@ $currentContent = file_exists(CONTENT_FILE)
 
   <div class="box">
     <h2>Contenu</h2>
-    <p><small>Utilise "Téléverser image (base64)" pour embarquer une image directement dans la page (pas de fichier à gérer).</small></p>
+    <p><small>Utilisez « Téléverser image (base64) » pour embarquer une image directement dans la page (pas de fichier à gérer).</small></p>
 
     <?php if (!empty($config['readonly_mode'])): ?>
       <div class="warn"><b>Lecture seule :</b> l'édition est possible mais l'enregistrement est désactivé.</div>
@@ -336,7 +336,7 @@ $currentContent = file_exists(CONTENT_FILE)
 
               const maxBytes = 2 * 1024 * 1024;
               if (file.size > maxBytes) {
-                alert("Image trop lourde (> 2MB). Réduis-la avant (ou compresse).");
+                alert("Image trop lourde (> 2MB). Réduisez-la ou compressez-la avant.");
                 return;
               }
 
